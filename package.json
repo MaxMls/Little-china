@@ -8,5 +8,12 @@
 "license": "Apache",
 "engines": {
     "node": "~0.10.0 || ~4.2.0"
-  }
+  },
+	"dependencies" :
+	{
+		"sqlite3" : "latest",
+		"express" : "latest",
+		"multer" : "latest",
+		"body-parser" : "latest"
+	}
 }
