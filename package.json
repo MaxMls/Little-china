@@ -13,7 +13,6 @@
 	{
 		"sqlite3" : "latest",
 		"express" : "latest",
-		"multer" : "latest",
-		"body-parser" : "latest"
+		"multer" : "latest"
 	}
 }
