@@ -12,7 +12,7 @@ db.serialize( () => {
 })
 
 
-app.use(express.static('www'));
+app.use(express.static('public'));
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true})) // for parsing application/x-www-form-urlencoded
 
@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({extended: true})) // for parsing application/x-ww
 // добавление товара
 var storage = multer.diskStorage({
 	destination: function (req, file, callback) {
-		callback(null, './www/images')
+		callback(null, './public/images')
 	},
 	filename: function (req, file, callback) {
 		let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length)
