@@ -142,7 +142,7 @@
 					let maxSum = 0
 					let bestPerm = []
 					// Наименьшее/наибольшее возможное количество товаров на приближенную снизу сумму
-
+					let j = 0;
 					do{
 						let sum = 0
 						let perm = []
@@ -159,6 +159,8 @@
 								bestPerm = perm.slice(0);
 							}
 						}
+						j++;
+						if (j > 1000) break;
 					}
 					while(NextPerm(response) != false)
 
