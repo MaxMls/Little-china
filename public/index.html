@@ -43,14 +43,14 @@
 		</nav>
 		<div class="container">
 			<form> 
-				Choose goods for <input id="lucky" type="number" min="1"> $ <a href="#" class="btn btn-secondary bg-info" onclick="update()"  data-placement="top" title="tap here!">Ok</a>
+				Choose goods for <input id="lucky" type="number" min="1"> $ <a href="#" class="btn btn-secondary bg-info" onclick="luckyChoose()"  data-placement="top" title="tap here!">Ok</a>
 				<div id="soot"></div>
 				<a id="buyAll" href="#" class="btn btn-secondary bg-info" data-toggle="modal" data-target="#myModal" data-placement="top" title="tap here!">Buy All!!!</a>
 			</form> 
 			<br>
 			<form> 
 				Search <input id="search" type="string">
-				<a href="#" class="btn btn-secondary bg-info" onclick="update()"  data-placement="top" title="tap here!">Ok</a>
+				<a href="#" class="btn btn-secondary bg-info" onclick="runSearch()"  data-placement="top" title="tap here!">Ok</a>
 			</form> 
 			<br>
 			<p><span style="font-weight:lighter;"><strong>Sort price by</strong>
@@ -67,11 +67,12 @@
 
 			<div class="col-sm-6 col-lg-3 cardinfo">
 				<div class="card">
-					<img class="card-img-top" alt="Card header image" src="load.gif">
+					<img class="card-img-top" alt="Card header image" src="">
 					<div class="card-body">
-						<h5 class="card-title">Загрузка товаров...</h5>
-						<p class="card-text">Пожалуйста подождите</p>
+						<h5 class="card-title"></h5>
+						<p class="card-text"></p>
 						<a href="#" class="btn btn-secondary bg-info" data-toggle="modal" data-target="#myModal" data-placement="top" title="tap here!">Buy</a>
+						<div class="idItem" style="display: none;"></div>
 					</div>
 				</div>
 				<br>		
@@ -95,26 +96,107 @@
 
 	<script>
 		'use strict';
-		///	
+		///	sorting
 		var select = document.getElementsByTagName('select')[0];
-		if(Cookies.get('sort') == undefined) Cookies.set('sort', 'time')
-			else select.value = Cookies.get('sort')
-				function selectedSort(selObj){
-					Cookies.set('sort', selObj.value)
-					update()
-				}
+		if(Cookies.get('sort') == undefined) 
+			Cookies.set('sort', 'time')
+		else 
+			select.value = Cookies.get('sort')
+		var srt = Cookies.get('sort')
+
+		
 		///
 		var buyAll = document.getElementById('buyAll')
+		var offset = 0
+
+
+		var purchasedId = []
+		if(Cookies.get('purchasedId') == undefined) 
+			Cookies.set('purchasedId', [])
+		else 
+			purchasedId = Cookies.getJSON('purchasedId')
 		
 
 
 		
 		var parentcard = document.getElementById('parentcards')
 		var lastcard = document.getElementById('lastcard')
+		var luckyInput = document.getElementById('lucky')
+		var searchInput = document.getElementById('search')
+		var reqMaxCount = 4
 
-		update()
+		clearAndShowLoad()
+		requestItems()
 
-		function update() {
+
+
+
+		var luskyArr = []
+		function luckyChoose() {
+			let valL = luckyInput.value
+			clearAndShowLoad()
+			luckyInput.value = valL
+
+			requestItems()
+		}
+		
+		function luckyCallback(arr) {
+			let fixSum = document.getElementById('lucky').value - 0
+			let maxSum = 0
+
+			arr.sort(function(a,b){return a.price - b.price})
+
+			luskyArr = []
+
+			for (var i = 0; i < arr.length; i++) {
+				if (maxSum + arr[i].price <= fixSum && !purchasedId.includes(arr[i].id)) {
+					maxSum += arr[i].price
+					luskyArr.push(arr[i])
+				}
+			}
+
+			switch (srt) {
+				case 'in':
+					luskyArr.sort(function(a,b){return a.price - b.price})
+					break;
+				case 'time':
+					luskyArr.sort(function(a,b){return a.id - b.id})
+					break;
+				case 'de':
+					luskyArr.sort(function(a,b){return b.price - a.price})
+					break;
+			}
+
+
+			document.getElementById("soot").innerHTML = maxSum+"$/"+fixSum+"$"
+			buyAll.style.display = 'block'
+			appendElements(luskyArr)
+		}
+
+		function selectedSort(selObj){
+			Cookies.set('sort', selObj.value)
+			srt = selObj.value
+			clearAndShowLoad()
+			selObj.value = srt
+			/*if(!luskyArr) */
+				requestItems()
+		/*	else
+				luckyCallback(luskyArr)*/
+		}
+
+		function runSearch(){
+			let valL = searchInput.value
+			clearAndShowLoad()
+			searchInput.value = valL
+
+			requestItems()
+		}
+		
+
+		function clearAndShowLoad(){
+			offset = 0
+			luckyInput.value = ''
+			searchInput.value = ''
 			buyAll.style.display = 'none'
 			document.getElementById("soot").innerHTML = ''
 			var cards = document.getElementsByClassName('cardinfo')
@@ -122,103 +204,75 @@
 			while (cards.length > 1) {
 				document.getElementsByClassName('cardinfo')[0].outerHTML = ''
 			}
+			let el = document.getElementsByClassName('cardinfo')[0]
+			el.getElementsByClassName('card-img-top')[0].src = "load.gif"
+			el.getElementsByClassName('card-text')[0].innerHTML = "Пожалуйста подождите"
+			el.getElementsByClassName('card-title')[0].innerHTML = "Загрузка товаров..."
+		}
 
-			var lucky = document.getElementById('lucky').value
+
+		var loading = false
+		$(window).scroll(function(){ // Подгрузка
+			checkScroll()
+		})
+		function checkScroll(){
+			if ($(window).scrollTop() == $(document).height() - $(window).height() && !loading && lucky != ''){
+				requestItems()
+			}
+		}
+
+
+		function requestItems() {
+			loading = true
+
+			var lucky = luckyInput.value
+			var find = searchInput.value
 			var settings = {
 				"async": true,
 				"crossDomain": true,
 				"url": "/api/get",
 				"method": "POST",
-				"data": {sort: Cookies.get('sort'), 
-				find: document.getElementById('search').value, 
-				lucky: lucky}
+				"data": {sort: srt, find: find, lucky: lucky, offset: offset, count: reqMaxCount}
 			}
+			
 
 			$.ajax(settings).done(function (response) {
+				loading = false
+				offset += response.length
 
-
-				if(lucky != '' && 0 != response.length){
-					let fixSum = document.getElementById('lucky').value - 0
-					let maxSum = 0
-					let bestPerm = []
-					// Наименьшее/наибольшее возможное количество товаров на приближенную снизу сумму
-					let j = 0;
-					do{
-						let sum = 0
-						let perm = []
-
-						for (var i = 0; i < response.length; i++) {
-							sum += response[i].price - 0
-							perm.push(response[i])
-
-							if(sum > fixSum){
-								break;
-							}
-							else if (sum > maxSum) {
-								maxSum = sum;
-								bestPerm = perm.slice(0);
-							}
-						}
-						j++;
-						if (j > 1000) break;
-					}
-					while(NextPerm(response) != false)
-
-					response = bestPerm
-					document.getElementById("soot").innerHTML = maxSum+"$/"+fixSum+"$"
-					buyAll.style.display = 'block'
+				if (0 == response.length || lucky == ''){
+					appendElements(response)
+					checkScroll()
+				}
+				else{
+					luckyCallback(response)
 				}
 
-
-
-
-
-				for (var i = 0; i < response.length; i++) {
-					
-					cards[0].getElementsByClassName('card-title')[0].innerHTML = response[i].name
-					cards[0].getElementsByClassName('card-text')[0].innerHTML = response[i].price
-					cards[0].getElementsByClassName('card-img-top')[0].src = 'images/'+ response[i].image
-
-					let clone = cards[0].cloneNode(true)
-					clone.style.display = 'block'
-					parentcard.insertBefore(clone, lastcard)
-					clone.itemid = response[i].id
-
-					$(clone).on('click', function(e) {
-						// Добавить в корзину
-					})
-					
-				}
-				document.getElementsByClassName('cardinfo')[0].style.display = 'none'
 			})
 		}
 
+		function appendElements(response){
+			var cards = document.getElementsByClassName('cardinfo')
 
-		function Swap(x,y,a) {
-		  var b = a[x];
-		  a[x] = a[y];
-		  a[y] = b;
-		  return a;
+			for (var i = 0; i < response.length; i++) {
+
+				cards[0].getElementsByClassName('card-title')[0].innerHTML = response[i].name
+				cards[0].getElementsByClassName('card-text')[0].innerHTML = response[i].price
+				cards[0].getElementsByClassName('card-img-top')[0].src = 'images/'+ response[i].image
+
+				let clone = cards[0].cloneNode(true)
+				clone.style.display = 'block'
+				parentcard.insertBefore(clone, lastcard)
+				clone.itemid = response[i].id
+
+				$(clone).on('click', function(e) {
+					purchasedId.push(this.itemid)
+					Cookies.set('purchasedId', purchasedId)
+				})
+
+			}
+			document.getElementsByClassName('cardinfo')[0].style.display = 'none'
 		}
-
-		function NextPerm(a) {
-            let n = a.length;
-            let j = n - 2;
-            while (j != -1 && a[j].price >= a[j + 1].price) j--; // найти число меньше предыдущего
-            if (j == -1)
-                return false; // перестановок нет
-
-            let k = n - 1;
-            while (a[j].price >= a[k].price) k--; // число больше прошлого
-
-            Swap(j, k,a);
-            let l = j + 1, r = n - 1;
-            while (l < r) // переворот
-                Swap( l++, r--,a)
-            return true;
-        }
-
-        
 
 	</script>
 </body>
