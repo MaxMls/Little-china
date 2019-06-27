@@ -69,9 +69,10 @@ app.post('/api/get', function (req, res) {
 		sql = " SELECT * FROM items " 
 		+ (fnd != '' ? "WHERE altname LIKE '%"+fnd.toUpperCase()+"%' " : '')
 		+ (srt == 'time' ? '' : ' ORDER BY price ' + (srt == 'in' ? 'ASC' : 'DESC'))
+		+ ' LIMIT '+ req.body.count +' OFFSET ' + req.body.offset
 	}
 	else{
-		sql = " SELECT * FROM items WHERE price <= " + lcl + " ORDER BY price "
+		sql = " SELECT * FROM items WHERE price <= " + lcl + " ORDER BY RANDOM() LIMIT 20"
 	}
 
 	console.log(sql)
