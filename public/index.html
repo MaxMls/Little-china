@@ -53,7 +53,7 @@
 				<a href="#" class="btn btn-secondary bg-info" onclick="runSearch()"  data-placement="top" title="tap here!">Ok</a>
 			</form> 
 			<br>
-			<p><span style="font-weight:lighter;"><strong>Sort price by</strong>
+			<p><span style="font-weight:lighter;"><strong>Sort by</strong>
 				<select onchange="selectedSort(this)" name="sorting">
 					<option value="in">increase</option>
 					<option value="de">decrease</option>
@@ -139,6 +139,15 @@
 
 			requestItems()
 		}
+
+		var buyAll = document.getElementById('buyAll')
+
+		buyAll.onclick = function(){
+			for (var i = 0; i < luskyArr.length; i++) {
+				purchasedId.push(luskyArr[i].id)
+			}
+			Cookies.set('purchasedId', purchasedId)
+		}
 		
 		function luckyCallback(arr) {
 			let fixSum = document.getElementById('lucky').value - 0
@@ -176,24 +185,36 @@
 		function selectedSort(selObj){
 			Cookies.set('sort', selObj.value)
 			srt = selObj.value
+			let fi = searchInput.value
+			let li = luckyInput.value
+			let larr = luskyArr
 			clearAndShowLoad()
 			selObj.value = srt
-			/*if(!luskyArr) */
+			if(!larr || larr.length == 0) {
+				searchInput.value = fi
+				search = fi
 				requestItems()
-		/*	else
-				luckyCallback(luskyArr)*/
+			}
+			else{
+				luckyInput.value = li
+				luskyArr = larr
+				luckyCallback(luskyArr)
+			}
 		}
+		var search = ''
 
 		function runSearch(){
-			let valL = searchInput.value
+			let ser = searchInput.value
 			clearAndShowLoad()
-			searchInput.value = valL
-
+			searchInput.value = ser
+			search = ser
 			requestItems()
 		}
 		
 
 		function clearAndShowLoad(){
+			search = ''
+			luskyArr = []
 			offset = 0
 			luckyInput.value = ''
 			searchInput.value = ''
@@ -216,17 +237,18 @@
 			checkScroll()
 		})
 		function checkScroll(){
-			if ($(window).scrollTop() == $(document).height() - $(window).height() && !loading && lucky != ''){
+			if ($(window).scrollTop() == $(document).height() - $(window).height() && !loading && lucky.value == ''){
 				requestItems()
 			}
 		}
 
 
 		function requestItems() {
+			if(loading) return
 			loading = true
 
 			var lucky = luckyInput.value
-			var find = searchInput.value
+			var find = search
 			var settings = {
 				"async": true,
 				"crossDomain": true,
