@@ -76,7 +76,6 @@ app.post('/api/get', function (req, res) {
 	}
 
 	console.log(sql)
-	//console.log("SELECT * FROM items" + (srt == 'time' ? '' : ' ORDER BY price ' + (srt == 'in' ? 'ASC' : 'DESC')))
 	let json = []
 
 	db.each(sql, (e, r) => {
