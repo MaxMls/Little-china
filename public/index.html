@@ -226,9 +226,13 @@
 				document.getElementsByClassName('cardinfo')[0].outerHTML = ''
 			}
 			let el = document.getElementsByClassName('cardinfo')[0]
-			el.getElementsByClassName('card-img-top')[0].src = "load.gif"
-			el.getElementsByClassName('card-text')[0].innerHTML = "Пожалуйста подождите"
-			el.getElementsByClassName('card-title')[0].innerHTML = "Загрузка товаров..."
+
+			let clone = el.cloneNode(true)
+			clone.getElementsByClassName('card-img-top')[0].src = "load.gif"
+			clone.getElementsByClassName('card-text')[0].innerHTML = "Пожалуйста подождите"
+			clone.getElementsByClassName('card-title')[0].innerHTML = "Загрузка товаров..."
+			parentcard.insertBefore(clone, el)
+			el.outerHTML = ''
 		}
 
 
@@ -237,7 +241,7 @@
 			checkScroll()
 		})
 		function checkScroll(){
-			if ($(window).scrollTop() == $(document).height() - $(window).height() && !loading && lucky.value == ''){
+			if ($(window).scrollTop() >= $(document).height() - $(window).height()-300 && !loading && lucky.value == ''){
 				requestItems()
 			}
 		}
